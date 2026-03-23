@@ -6,109 +6,56 @@ export default function Home() {
   const globeRef = useRef<HTMLCanvasElement>(null);
   const bgRef = useRef<HTMLCanvasElement>(null);
 
-  // Background particle animation — full page
   useEffect(() => {
     const canvas = bgRef.current;
     if (!canvas) return;
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
-
-    const setSize = () => {
-      canvas.width = window.innerWidth;
-      canvas.height = window.innerHeight;
-    };
+    const setSize = () => { canvas.width = window.innerWidth; canvas.height = window.innerHeight; };
     setSize();
     window.addEventListener("resize", setSize);
-
     const particles: { x: number; y: number; vx: number; vy: number; r: number; alpha: number }[] = [];
     for (let i = 0; i < 100; i++) {
-      particles.push({
-        x: Math.random() * canvas.width,
-        y: Math.random() * canvas.height,
-        vx: (Math.random() - 0.5) * 0.25,
-        vy: (Math.random() - 0.5) * 0.25,
-        r: Math.random() * 1.5 + 0.3,
-        alpha: Math.random() * 0.35 + 0.08,
-      });
+      particles.push({ x: Math.random() * canvas.width, y: Math.random() * canvas.height, vx: (Math.random() - 0.5) * 0.25, vy: (Math.random() - 0.5) * 0.25, r: Math.random() * 1.5 + 0.3, alpha: Math.random() * 0.35 + 0.08 });
     }
-
     let raf: number;
     function draw() {
-      const w = canvas!.width;
-      const h = canvas!.height;
+      const w = canvas!.width; const h = canvas!.height;
       ctx!.clearRect(0, 0, w, h);
-
       for (let i = 0; i < particles.length; i++) {
         for (let j = i + 1; j < particles.length; j++) {
-          const dx = particles[i].x - particles[j].x;
-          const dy = particles[i].y - particles[j].y;
+          const dx = particles[i].x - particles[j].x; const dy = particles[i].y - particles[j].y;
           const dist = Math.sqrt(dx * dx + dy * dy);
-          if (dist < 140) {
-            ctx!.beginPath();
-            ctx!.moveTo(particles[i].x, particles[i].y);
-            ctx!.lineTo(particles[j].x, particles[j].y);
-            ctx!.strokeStyle = `rgba(110,231,183,${0.05 * (1 - dist / 140)})`;
-            ctx!.lineWidth = 0.4;
-            ctx!.stroke();
-          }
+          if (dist < 140) { ctx!.beginPath(); ctx!.moveTo(particles[i].x, particles[i].y); ctx!.lineTo(particles[j].x, particles[j].y); ctx!.strokeStyle = `rgba(110,231,183,${0.05 * (1 - dist / 140)})`; ctx!.lineWidth = 0.4; ctx!.stroke(); }
         }
       }
-
-      particles.forEach((p) => {
-        ctx!.beginPath();
-        ctx!.arc(p.x, p.y, p.r, 0, Math.PI * 2);
-        ctx!.fillStyle = `rgba(110,231,183,${p.alpha})`;
-        ctx!.fill();
-        p.x += p.vx;
-        p.y += p.vy;
-        if (p.x < 0 || p.x > w) p.vx *= -1;
-        if (p.y < 0 || p.y > h) p.vy *= -1;
-      });
-
+      particles.forEach((p) => { ctx!.beginPath(); ctx!.arc(p.x, p.y, p.r, 0, Math.PI * 2); ctx!.fillStyle = `rgba(110,231,183,${p.alpha})`; ctx!.fill(); p.x += p.vx; p.y += p.vy; if (p.x < 0 || p.x > w) p.vx *= -1; if (p.y < 0 || p.y > h) p.vy *= -1; });
       raf = requestAnimationFrame(draw);
     }
     draw();
     return () => { cancelAnimationFrame(raf); window.removeEventListener("resize", setSize); };
   }, []);
 
-  // Globe animation
   useEffect(() => {
     const canvas = globeRef.current;
     if (!canvas) return;
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
-
-    let W = (canvas.width = canvas.offsetWidth);
-    let H = (canvas.height = canvas.offsetHeight);
+    let W = (canvas.width = canvas.offsetWidth); let H = (canvas.height = canvas.offsetHeight);
     const resize = () => { W = canvas.width = canvas.offsetWidth; H = canvas.height = canvas.offsetHeight; };
     window.addEventListener("resize", resize);
-
     const cx = W * 0.72, cy = H * 0.5, R = Math.min(W, H) * 0.32;
     let rot = 0;
-
     const dots: { lat: number; lng: number }[] = [];
     for (let i = 0; i < 180; i++) dots.push({ lat: (Math.random() - 0.5) * Math.PI, lng: Math.random() * Math.PI * 2 });
-
     const arcs: { from: number; to: number; progress: number; speed: number }[] = [];
     for (let i = 0; i < 18; i++) arcs.push({ from: Math.floor(Math.random() * dots.length), to: Math.floor(Math.random() * dots.length), progress: Math.random(), speed: 0.002 + Math.random() * 0.003 });
-
     const proj = (lat: number, lng: number, r: number) => ({ x: cx + R * Math.cos(lat) * Math.sin(lng + r), y: cy - R * Math.sin(lat), z: R * Math.cos(lat) * Math.cos(lng + r) });
-
     let raf: number;
     function draw() {
-      ctx!.clearRect(0, 0, W, H);
-      ctx!.strokeStyle = "rgba(110,231,183,0.06)";
-      ctx!.lineWidth = 0.5;
-      for (let lat = -80; lat <= 80; lat += 20) {
-        ctx!.beginPath(); let f = true;
-        for (let lng = 0; lng <= 360; lng += 3) { const p = proj(lat * Math.PI / 180, lng * Math.PI / 180, rot); if (p.z < 0) { f = true; continue; } f ? (ctx!.moveTo(p.x, p.y), f = false) : ctx!.lineTo(p.x, p.y); }
-        ctx!.stroke();
-      }
-      for (let lng = 0; lng < 360; lng += 20) {
-        ctx!.beginPath(); let f = true;
-        for (let lat = -90; lat <= 90; lat += 3) { const p = proj(lat * Math.PI / 180, lng * Math.PI / 180, rot); if (p.z < 0) { f = true; continue; } f ? (ctx!.moveTo(p.x, p.y), f = false) : ctx!.lineTo(p.x, p.y); }
-        ctx!.stroke();
-      }
+      ctx!.clearRect(0, 0, W, H); ctx!.strokeStyle = "rgba(110,231,183,0.06)"; ctx!.lineWidth = 0.5;
+      for (let lat = -80; lat <= 80; lat += 20) { ctx!.beginPath(); let f = true; for (let lng = 0; lng <= 360; lng += 3) { const p = proj(lat * Math.PI / 180, lng * Math.PI / 180, rot); if (p.z < 0) { f = true; continue; } f ? (ctx!.moveTo(p.x, p.y), f = false) : ctx!.lineTo(p.x, p.y); } ctx!.stroke(); }
+      for (let lng = 0; lng < 360; lng += 20) { ctx!.beginPath(); let f = true; for (let lat = -90; lat <= 90; lat += 3) { const p = proj(lat * Math.PI / 180, lng * Math.PI / 180, rot); if (p.z < 0) { f = true; continue; } f ? (ctx!.moveTo(p.x, p.y), f = false) : ctx!.lineTo(p.x, p.y); } ctx!.stroke(); }
       dots.forEach(d => { const p = proj(d.lat, d.lng, rot); if (p.z < 0) return; ctx!.beginPath(); ctx!.arc(p.x, p.y, 1.5, 0, Math.PI * 2); ctx!.fillStyle = `rgba(110,231,183,${(p.z / R * 0.8 + 0.2) * 0.7})`; ctx!.fill(); });
       arcs.forEach(arc => {
         const steps = 40, pts = [];
@@ -121,8 +68,7 @@ export default function Home() {
         arc.progress += arc.speed;
         if (arc.progress > 1) { arc.progress = 0; arc.from = Math.floor(Math.random() * dots.length); arc.to = Math.floor(Math.random() * dots.length); }
       });
-      rot += 0.003;
-      raf = requestAnimationFrame(draw);
+      rot += 0.003; raf = requestAnimationFrame(draw);
     }
     draw();
     return () => { cancelAnimationFrame(raf); window.removeEventListener("resize", resize); };
@@ -130,11 +76,8 @@ export default function Home() {
 
   return (
     <main className="bg-[#060A12] text-[#F1F5F9] min-h-screen font-sans relative">
-
-      {/* BG PARTICLES — fixed, whole page */}
       <canvas ref={bgRef} className="fixed inset-0 w-full h-full pointer-events-none z-0" />
 
-      {/* NAV */}
       <nav className="fixed top-0 left-0 right-0 z-50 px-10 py-4 flex justify-between items-center bg-[#060A12]/80 backdrop-blur-xl border-b border-white/5">
         <span className="font-bold text-xl bg-gradient-to-r from-emerald-400 to-sky-400 bg-clip-text text-transparent">AM.</span>
         <div className="flex gap-8 text-sm text-slate-400">
@@ -149,7 +92,6 @@ export default function Home() {
         </a>
       </nav>
 
-      {/* HERO */}
       <section className="min-h-screen flex flex-col justify-center px-10 pt-24 pb-12 relative overflow-hidden z-10">
         <canvas ref={globeRef} className="absolute inset-0 w-full h-full pointer-events-none" style={{ opacity: 0.85 }} />
         <div className="relative z-10 max-w-xl">
@@ -178,21 +120,26 @@ export default function Home() {
 
       <div className="h-px bg-white/5 max-w-5xl mx-auto relative z-10" />
 
-      {/* ABOUT */}
       <section id="about" className="max-w-5xl mx-auto px-10 py-16 relative z-10">
         <div className="grid grid-cols-[280px_1fr] gap-14 items-center">
-          <div className="relative">
+          <div className="relative w-[280px] h-[280px]">
+            {/* Spinning ring */}
             <div className="absolute inset-0 rounded-full p-[3px]" style={{background:"conic-gradient(from 0deg,#6EE7B7,#38BDF8,#A78BFA,#6EE7B7)",animation:"spin 8s linear infinite"}}>
               <div className="w-full h-full rounded-full bg-[#060A12]" />
             </div>
+            {/* Photo */}
             <div className="relative w-[280px] h-[280px] rounded-full overflow-hidden border-4 border-[#060A12]">
               <Image src="/aditya.jpg" alt="Aditya Mohalkar" fill className="object-cover object-top" />
             </div>
-            <div className="absolute -bottom-2 -right-4 bg-[#0A0F1C] border border-white/10 rounded-xl px-3 py-2 flex items-center gap-2 text-xs font-medium shadow-xl z-10">
-              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />Available Now
-            </div>
-            <div className="absolute -top-2 -left-4 bg-[#0A0F1C] border border-white/10 rounded-xl px-3 py-2 flex items-center gap-2 text-xs font-medium shadow-xl z-10">
+            {/* Badge 1 — Next.js Dev */}
+            <div className="absolute -top-3 -left-6 bg-[#0A0F1C] border border-white/10 rounded-xl px-3 py-2 flex items-center gap-2 text-xs font-medium shadow-xl z-10"
+              style={{animation:"badgeBounce1 3s ease-in-out infinite"}}>
               ⚡ Next.js Dev
+            </div>
+            {/* Badge 2 — Available Now */}
+            <div className="absolute -bottom-3 -right-6 bg-[#0A0F1C] border border-white/10 rounded-xl px-3 py-2 flex items-center gap-2 text-xs font-medium shadow-xl z-10"
+              style={{animation:"badgeBounce2 4s ease-in-out infinite"}}>
+              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />Available Now
             </div>
           </div>
           <div>
@@ -211,7 +158,6 @@ export default function Home() {
 
       <div className="h-px bg-white/5 max-w-5xl mx-auto relative z-10" />
 
-      {/* PROJECTS */}
       <section id="projects" className="max-w-5xl mx-auto px-10 py-16 relative z-10">
         <p className="text-xs font-mono text-emerald-400 tracking-widest uppercase mb-2">Work</p>
         <h2 className="text-4xl font-extrabold tracking-tight mb-2">What I&apos;ve Built</h2>
@@ -238,7 +184,6 @@ export default function Home() {
 
       <div className="h-px bg-white/5 max-w-5xl mx-auto relative z-10" />
 
-      {/* SKILLS */}
       <section id="skills" className="max-w-5xl mx-auto px-10 py-16 relative z-10">
         <p className="text-xs font-mono text-emerald-400 tracking-widest uppercase mb-2">Skills</p>
         <h2 className="text-4xl font-extrabold tracking-tight mb-2">Tech Stack</h2>
@@ -263,7 +208,6 @@ export default function Home() {
 
       <div className="h-px bg-white/5 max-w-5xl mx-auto relative z-10" />
 
-      {/* CONTACT */}
       <section id="contact" className="max-w-5xl mx-auto px-10 py-16 relative z-10">
         <div className="bg-[#0F1628]/80 backdrop-blur-sm border border-white/[0.06] rounded-3xl p-14 text-center relative overflow-hidden">
           <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[400px] h-[200px] bg-emerald-400/5 blur-3xl pointer-events-none" />
@@ -297,6 +241,14 @@ export default function Home() {
 
       <style jsx global>{`
         @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+        @keyframes badgeBounce1 {
+          0%, 100% { transform: translateY(0px); }
+          50% { transform: translateY(-8px); }
+        }
+        @keyframes badgeBounce2 {
+          0%, 100% { transform: translateY(0px); }
+          50% { transform: translateY(-8px); }
+        }
       `}</style>
 
     </main>
