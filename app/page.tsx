@@ -228,7 +228,7 @@ export default function Home() {
               <p className="text-slate-400 text-xs leading-relaxed mb-3">{p.desc}</p>
               <div className="flex flex-wrap gap-1 mb-4">{p.tags.map(t=><span key={t} className="bg-[#0F1628] text-slate-500 px-2 py-0.5 rounded text-[10px] font-mono">{t}</span>)}</div>
               <div className="flex gap-3">
-                <a href={p.demo} target="_blank" rel="noopener noreferrer" className="text-emerald-400 text-xs font-medium hover:opacity-70 transition-opacity">Live Demo →</a>
+                <a href={p.demo} target="_blank" rel="noopener noreferrer" className="text-emerald-400 text-xs font-medium hover:opacity-70 transition-opacity">My Work →</a>
                 <a href={p.github} target="_blank" rel="noopener noreferrer" className="text-slate-400 text-xs font-medium hover:text-white transition-colors">GitHub</a>
               </div>
             </div>
